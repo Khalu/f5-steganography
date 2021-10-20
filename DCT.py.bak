@@ -2,15 +2,14 @@ import math
 
 from util import create_array
 
-
 class DCT(object):
     N = 8
     QUALITY = 80
     QUANTUM_LUMINANCE = [
             16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19, 26, 58, 60, 55,
             14, 13, 16, 24, 40, 57, 69, 56, 14, 17, 22, 29, 51, 87, 80, 62,
-            18, 22, 37, 56, 68, 109, 103, 77, 24, 35, 55, 64, 81, 104, 113,
-            92, 49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95, 98, 112,
+            18, 22, 37, 56, 68, 109, 103, 77, 24, 35, 55, 64, 81, 104, 113, 
+            92, 49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95, 98, 112, 
             100, 103, 99
         ]
 
@@ -21,18 +20,17 @@ class DCT(object):
             99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99
         ]
     QUANTUM = [QUANTUM_LUMINANCE, QUANTUM_CHROMINANCE]
-
+    
     def __init__(self, quality):
         self.N = 8
         self.QUALITY = 80
-        self.quantum = create_array(0, 2, self.N * self.N)
+        self.quantum  = create_array(0, 2, self.N * self.N)
         self.divisors = create_array(0, 2, self.N * self.N)
 
         self.init_matrix(quality)
 
     def init_matrix(self, quality):
-        AAN_scale_factor = [1.0, 1.387039845, 1.306562965,
-                            1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379]
+        AAN_scale_factor = [1.0, 1.387039845, 1.306562965, 1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379]
         if quality <= 0:
             quality = 1
         elif quality > 100:
@@ -42,24 +40,19 @@ class DCT(object):
         else:
             quality = 200 - quality * 2
 
-        def validate(val): return 1 if val <= 0 else (
-            255 if val > 255 else val)
-
-        def cal_quantum(quantum): return validate(
-            (quantum * quality + 50) / 100)
-        def cal_divisors(i_quantum1): return 1.0 / i_quantum1[1] / (
-            AAN_scale_factor[i_quantum1[0] / 8] * AAN_scale_factor[i_quantum1[0] % 8] * 8.0)
+        validate = lambda val: 1 if val <= 0 else (255 if val > 255 else val)
+        cal_quantum = lambda quantum: validate((quantum * quality + 50) / 100)
+        cal_divisors = lambda (i, quantum): 1.0 / quantum / (AAN_scale_factor[i / 8] * AAN_scale_factor[i % 8] * 8.0)
 
         for i in range(2):
-            self.quantum[i] = list(map(cal_quantum, self.QUANTUM[i]))
-            self.divisors[i] = list(
-                map(cal_divisors, enumerate(self.quantum[i])))
+            self.quantum[i] = map(cal_quantum, self.QUANTUM[i])
+            self.divisors[i] = map(cal_divisors, enumerate(self.quantum[i]))
 
     def forward_dct_extreme(self, indata):
         output = create_array(0.0, self.N, self.N)
-        def my_cos(x): return math.cos((2.0 * x + 1) * u * math.PI / 16)
-        def special(x): return 1.0 / math.sqrt(2) if x == 0 else 1.0
-        range_8 = list(range(8))
+        my_cos = lambda x: math.cos((2.0 * x + 1) * u * math.PI / 16)
+        special = lambda x: 1.0 / math.sqrt(2) if x == 0 else 1.0
+        range_8 = range(8)
 
         for v in range_8:
             for u in range_8:
@@ -71,13 +64,12 @@ class DCT(object):
         return output
 
     def forward_dct(self, indata):
-        output = [
-            [indata[i][j] - 128.0 for j in range(0, 8)] for i in range(0, 8)]
+        output = [[indata[i][j] - 128.0 for j in range(0, 8)] for i in range(0, 8)]
         tmp = create_array(0, 14)
 
         for i in range(8):
             for j in range(4):
-                tmp[j] = output[i][j] + output[i][7-j]
+                tmp[j]   = output[i][j] + output[i][7-j]
                 tmp[7-j] = output[i][j] - output[i][7-j]
 
             output[i][0] = tmp[0] + tmp[3] + (tmp[1] + tmp[2])
@@ -108,7 +100,7 @@ class DCT(object):
 
         for i in range(8):
             for j in range(4):
-                tmp[j] = output[j][i] + output[7-j][i]
+                tmp[j]   = output[j][i] + output[7-j][i]
                 tmp[7-j] = output[j][i] - output[7-j][i]
 
             output[0][i] = tmp[0] + tmp[3] + (tmp[1] + tmp[2])
@@ -140,7 +132,7 @@ class DCT(object):
         return output
 
     def quantize_block(self, indata, code):
-        return [int(round(indata[i_divisors[0] / 8][i_divisors[0] % 8] * i_divisors[1])) for i_divisors in enumerate(self.divisors[code])]
+        return map(lambda (i, divisors): int(round(indata[i / 8][i % 8] * divisors)), enumerate(self.divisors[code]))
 
     def quantize_block_extreme(self, indata, code):
-        return [int(round(indata[i_quantum[0] / 8][i_quantum[0] % 8] * i_quantum[1])) for i_quantum in enumerate(self.quantum[code])]
+        return map(lambda (i, quantum): int(round(indata[i / 8][i % 8] * quantum)), enumerate(self.quantum[code]))

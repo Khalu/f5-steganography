@@ -139,7 +139,7 @@ class JpegEncoder(object):
         with open(self.out, "rb") as imagefile:
             exifimage = exImg(imagefile)
             gpsdict = eval(self.gps)
-            for ref, angle in list(gpsdict.items()):
+            for ref, angle in gpsdict.items():
                 if ref.upper() == "N" or ref.upper() == "S":
                     exifimage.gps_latitude_ref = ref.upper()
                     exifimage.gps_latitude = (angle[0], angle[1], angle[2])

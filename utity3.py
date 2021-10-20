@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import Image
+from PIL import Image
 from jpeg_encoder import JpegEncoder
 import sys
 import os
 from jpeg_extract import JpegExtract
-import StringIO
+import io
 import optparse
 import logging
 
@@ -43,17 +43,18 @@ if __name__ == '__main__':
             image = Image.open(options.image)
             data = options.data
             if not data:
-                print 'theres no data to embed'
+                print('theres no data to embed')
                 sys.exit(0)
 
             if not options.output:
-                print 'you didn\'t specify the output jpeg file, if will be default output.jpg'
+                print(
+                    'you didn\'t specify the output jpeg file, if will be default output.jpg')
                 options.output = 'output.jpg'
             elif os.path.exists(options.output) and os.path.isfile(options.output):
-                print 'the output file exists, do you really want to override it?'
-                answer = raw_input('y/n: ')
+                print('the output file exists, do you really want to override it?')
+                answer = input('y/n: ')
                 if answer != 'y':
-                    print 'exit'
+                    print('exit')
                     sys.exit(0)
             output = open(options.output, 'wb')
 
@@ -65,15 +66,15 @@ if __name__ == '__main__':
             if options.output:
                 output = open(options.output, 'wb')
             else:
-                output = StringIO.StringIO()
+                output = io.StringIO()
             image = open(options.image, 'rb')
             JpegExtract(output, options.password).extract(image.read())
 
             if not options.output:
-                print output.getvalue()
+                print((output.getvalue()))
 
             image.close()
             output.close()
     else:
-        print 'you didn\'t give a image or the image is not there'
+        print('you didn\'t give a image or the image is not there')
         parser.print_help()

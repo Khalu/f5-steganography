@@ -34,7 +34,7 @@ class EmbedData(object):
 
 class Permutation(object):
     def __init__(self, size, f5random):
-        self.shuffled = list(range(size))
+        self.shuffled = range(size)
         max_random = size
         for i in range(size):
             random_index = f5random.get_next_value(max_random)
